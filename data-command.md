@@ -142,3 +142,116 @@ wc: aa: 没有那个文件或目录
   - wc -L 打印最长一行的长度
   - wc -w 打印字数
 
+
+
+
+
+### SPLIT
+
+文件大小可以有显著变化。根据工作的不同，拆分文件是有益的，就像split。基本用法如下：
+
+~~~liunx
+#我们拆分这个CSV文件，每500行分割为一个新的文件new_filename
+
+split -l 500 filename.csv new_filename_
+
+# filename.csv
+# ls output
+# new_filename_aaa
+# new_filename_aab
+# new_filename_aac
+两个地方很奇怪：一个是命名方式，一个是缺少扩展名。后缀约定可以通过-d标识来数字化。添加文件扩展名，你需要执行下面这个find命令。他会给当前文件夹下的所有文件追加.csv后缀，所以需要小心使用。
+find . -type f -exec mv '{}' '{}'.csv ;
+
+# ls output
+# filename.csv.csv
+# new_filename_aaa.csv
+# new_filename_aab.csv
+# new_filename_aac.csv
+~~~
+
+- **有效的选项：**
+
+- - split -b按特定字节大小拆分
+  - split -a生成长度为N的后缀
+  - split -x使用十六进制后缀分割
+
+
+
+### **SORT & UNIQ**
+
+前面的命令是显而易见的：他们按照自己说的做。这两者提供了最重要的一击（即去重单词计数）。这是由于有uniq，它只处理重复的相邻行。因此在管道输出之前进行排序。一个有趣的事情是，sort -u将获得与sort file.txt | uniq相同的结果。
+
+
+
+Sort确实对数据科学家来说是一种很有用的小技巧：能够根据特定的列对整个CSV进行排序。
+
+~~~linux
+# Sorting a CSV file by the second column alphabetically
+sort -t"," -k2,2 filename.csv
+# Numerically
+sort -t"," -k2n,2 filename.csv
+# Reverse order
+sort -t"," -k2nr,2 filename.csv
+这里的-t选项是指定逗号作为分隔符。通常假设是空格或制表符。此外，-k标志是用来指定我们的键的。它的语法是-km,n，m是起始字段，n是最后一个字段。
+~~~
+
+- **有用的选项：**
+
+- - sort -f 忽略大小写
+  - sort -r 逆序
+  - sort -R 乱序
+  - uniq -c 计算出现次数
+  - uniq -d 只打印重复行
+
+
+
+### cut命令
+
+~~~linux
+#cut用于删除列。举个栗子，如果我们只想要第一列和第三列。
+cut -d, -f 1,3 filename.csv
+#选择除了第一列以外的所有列
+cut -d, -f 2- filename.csv
+#与其他的命令组合使用，cut命令作为过滤器
+＃打印存在“some_string_value”的第1列和第3列的前10行
+head filename.csv | grep "some_string_value" | cut -d, -f 1,3
+#找出第二列中唯一值的数量。
+cat filename.csv | cut -d, -f 2 | sort | uniq | wc -l
+# 计算唯一值出现的次数，限制输出前10个结果
+cat filename.csv | cut -d, -f 2 | sort | uniq -c | head
+~~~
+
+
+
+### **PASTE**
+
+paste 是个**有趣的小命令**。如果你想合并两个文件，而这两个文件的内容**又正好是有序的**，那 paste 就可以这样做。
+
+~~~linux
+# names.txt
+adam
+john
+zach
+
+# jobs.txt
+lawyer
+youtuber
+developer
+
+# Join the two into a CSV
+
+paste -d ',' names.txt jobs.txt > person_data.txt
+
+# Output
+adam,lawyer
+john,youtuber
+zach,developer
+~~~
+
+#### 其实都是一些sql语句的变化   下面还有
+
+​       	关于更多 SQL_-esque 变体，请看下面。
+
+
+
